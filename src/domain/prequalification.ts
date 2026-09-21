@@ -1,10 +1,10 @@
-import type { TenantRules, DocumentoRequerido } from "../schemas/tenant-rules.js";
+import type { TenantRules, DocumentoRequerido } from "@/schemas/tenant-rules";
 import type {
   FichaProspecto,
   ReglaEvaluada,
   ResultadoPrecalificacion,
   Semaforo,
-} from "../schemas/lead.js";
+} from "@/schemas/lead";
 
 /**
  * Motor determinista de pre-calificacion.

@@ -4,7 +4,7 @@ import {
   periodoDe,
   contadorDePlantilla,
   claveIdempotencia,
-} from "@/domain/usage.js";
+} from "@/domain/usage";
 
 /**
  * Estos contadores son la factura. Un error aqui no es un bug de analitica:

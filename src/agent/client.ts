@@ -1,5 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { serverEnv } from "../config/env.js";
+import { serverEnv } from "@/config/env";
 
 /**
  * Cliente de Anthropic.

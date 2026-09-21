@@ -1,18 +1,18 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import { serviceClient } from "../connectors/supabase.js";
+import { serviceClient } from "@/connectors/supabase";
 import {
   enviarRespuesta,
   descargarMedia,
   type MensajeNormalizado,
-} from "../connectors/whatsapp.js";
-import { correrTurno } from "../agent/run-turn.js";
-import { crearPuertos } from "./ports.js";
-import { parseTenantRules } from "../schemas/tenant-rules.js";
-import { expiraEn, modoDeSalida } from "../domain/conversation-window.js";
-import { periodoDe, claveIdempotencia } from "../domain/usage.js";
-import { serverEnv } from "../config/env.js";
-import { logAccion, logger } from "../lib/logger.js";
-import { tasaCache } from "../agent/client.js";
+} from "@/connectors/whatsapp";
+import { correrTurno } from "@/agent/run-turn";
+import { crearPuertos } from "./ports";
+import { parseTenantRules } from "@/schemas/tenant-rules";
+import { expiraEn, modoDeSalida } from "@/domain/conversation-window";
+import { periodoDe, claveIdempotencia } from "@/domain/usage";
+import { serverEnv } from "@/config/env";
+import { logAccion, logger } from "@/lib/logger";
+import { tasaCache } from "@/agent/client";
 
 /**
  * Orquestacion de un mensaje entrante.

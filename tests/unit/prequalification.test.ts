@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { evaluarPrecalificacion, temperaturaDe } from "@/domain/prequalification.js";
-import { parseTenantRules } from "@/schemas/tenant-rules.js";
+import { evaluarPrecalificacion, temperaturaDe } from "@/domain/prequalification";
+import { parseTenantRules } from "@/schemas/tenant-rules";
 import reglasDemo from "../../config/tenants/demo-dealer.json" with { type: "json" };
 
 const reglas = parseTenantRules(reglasDemo);

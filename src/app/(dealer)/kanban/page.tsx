@@ -1,5 +1,5 @@
-import { dealerClient } from "../../../connectors/supabase-server.js";
-import type { Etapa, Semaforo, Temperatura } from "../../../schemas/lead.js";
+import { dealerClient } from "@/connectors/supabase-server";
+import type { Etapa, Semaforo, Temperatura } from "@/schemas/lead";
 
 export const dynamic = "force-dynamic";
 

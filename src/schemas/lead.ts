@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { documentoRequeridoSchema } from "./tenant-rules.js";
+import { documentoRequeridoSchema } from "./tenant-rules";
 
 /**
  * Ficha del prospecto: lo que el copiloto extrae de la conversacion.

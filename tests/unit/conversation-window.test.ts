@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { expiraEn, ventanaAbierta, modoDeSalida } from "@/domain/conversation-window.js";
+import { expiraEn, ventanaAbierta, modoDeSalida } from "@/domain/conversation-window";
 
 /**
  * La ventana de 24h decide si un mensaje es gratis o facturable. Es la regla

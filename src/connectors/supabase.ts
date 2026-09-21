@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { serverEnv, publicEnv } from "../config/env.js";
+import { serverEnv, publicEnv } from "@/config/env";
 
 /**
  * Clientes de Supabase.

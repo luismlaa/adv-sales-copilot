@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { serverEnv } from "../config/env.js";
-import type { TenantRules } from "../schemas/tenant-rules.js";
+import { serverEnv } from "@/config/env";
+import type { TenantRules } from "@/schemas/tenant-rules";
 
 /**
  * Carga y composicion del system prompt.

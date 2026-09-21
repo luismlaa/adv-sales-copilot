@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { firmaValida, normalizarWebhook } from "../../../../connectors/whatsapp.js";
-import { manejarMensajeEntrante } from "../../../../orchestrator/handle-inbound.js";
-import { serverEnv } from "../../../../config/env.js";
-import { logger } from "../../../../lib/logger.js";
+import { firmaValida, normalizarWebhook } from "@/connectors/whatsapp";
+import { manejarMensajeEntrante } from "@/orchestrator/handle-inbound";
+import { serverEnv } from "@/config/env";
+import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

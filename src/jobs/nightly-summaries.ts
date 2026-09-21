@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { anthropic, modelo } from "../agent/client.js";
-import { serviceClient } from "../connectors/supabase.js";
-import { logger } from "../lib/logger.js";
+import { anthropic, modelo } from "@/agent/client";
+import { serviceClient } from "@/connectors/supabase";
+import { logger } from "@/lib/logger";
 
 /**
  * Resumenes nocturnos de leads, por Batch API.

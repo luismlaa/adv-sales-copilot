@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { importarCsv } from "@/import/vehicles.js";
+import { importarCsv } from "@/import/vehicles";
 
 /**
  * El dealer sube SU archivo, no una plantilla nuestra. Si la importacion

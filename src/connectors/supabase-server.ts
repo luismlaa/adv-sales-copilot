@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { publicEnv } from "../config/env.js";
+import { publicEnv } from "@/config/env";
 
 /**
  * Cliente de Supabase con la sesion del dealer.

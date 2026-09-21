@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
-import { serverEnv } from "../config/env.js";
-import { logger } from "../lib/logger.js";
+import { serverEnv } from "@/config/env";
+import { logger } from "@/lib/logger";
 
 /**
  * Cliente de WhatsApp Cloud API (oficial, Meta).

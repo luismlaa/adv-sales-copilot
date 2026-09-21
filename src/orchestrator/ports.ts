@@ -1,10 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { PuertosCopiloto } from "../agent/run-turn.js";
-import type { TenantRules } from "../schemas/tenant-rules.js";
-import { fichaProspectoSchema, type FichaProspecto } from "../schemas/lead.js";
-import { evaluarPrecalificacion, temperaturaDe } from "../domain/prequalification.js";
-import { asegurarTenant } from "../connectors/supabase.js";
-import { logAccion } from "../lib/logger.js";
+import type { PuertosCopiloto } from "@/agent/run-turn";
+import type { TenantRules } from "@/schemas/tenant-rules";
+import { fichaProspectoSchema, type FichaProspecto } from "@/schemas/lead";
+import { evaluarPrecalificacion, temperaturaDe } from "@/domain/prequalification";
+import { asegurarTenant } from "@/connectors/supabase";
+import { logAccion } from "@/lib/logger";
 
 /**
  * Implementacion de los puertos del copiloto contra Supabase.

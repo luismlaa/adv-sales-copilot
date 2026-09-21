@@ -1,10 +1,10 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import { anthropic, modelo, usoDe, MAX_TOKENS_TURNO, type UsoTokens } from "./client.js";
-import { TOOLS } from "./tools/definitions.js";
-import { cuerpoEstable, bloqueDealer, type DatosDealer } from "./prompt.js";
-import type { TenantRules } from "../schemas/tenant-rules.js";
-import type { ResultadoPrecalificacion } from "../schemas/lead.js";
-import { logger } from "../lib/logger.js";
+import { anthropic, modelo, usoDe, MAX_TOKENS_TURNO, type UsoTokens } from "./client";
+import { TOOLS } from "./tools/definitions";
+import { cuerpoEstable, bloqueDealer, type DatosDealer } from "./prompt";
+import type { TenantRules } from "@/schemas/tenant-rules";
+import type { ResultadoPrecalificacion } from "@/schemas/lead";
+import { logger } from "@/lib/logger";
 
 /**
  * Un turno de conversacion: entra lo que escribio la persona, sale lo que hay

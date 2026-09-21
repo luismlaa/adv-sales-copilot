@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { dealerClient } from "../../../../connectors/supabase-server.js";
-import { importarCsv, importarExcel } from "../../../../import/vehicles.js";
-import { logAccion, logger } from "../../../../lib/logger.js";
+import { dealerClient } from "@/connectors/supabase-server";
+import { importarCsv, importarExcel } from "@/import/vehicles";
+import { logAccion, logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 

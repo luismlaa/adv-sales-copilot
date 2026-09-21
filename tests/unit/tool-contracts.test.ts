@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { TOOLS } from "@/agent/tools/definitions.js";
+import { TOOLS } from "@/agent/tools/definitions";
 
 /**
  * Invariantes de las definiciones de herramientas.
