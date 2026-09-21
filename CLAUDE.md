@@ -73,6 +73,10 @@ Antes de escribir a mano una capacidad común (testing, deploy, changelog, revis
 
 > **H7 abierto (ver `decision-multitenant-vs-h-data` en memoria):** el `CLAUDE.md` de Advantio declara deploy por cliente y H-DATA exige aislamiento por instancia; este producto es multi-tenant con RLS. Luis autorizó construir así el 2026-09-20; la enmienda a los documentos rectores **no está aplicada** y bloquea H-SEC.
 
+## Qué falta para producción
+Antes de proponer trabajo nuevo, lee [`docs/PENDIENTES.md`](docs/PENDIENTES.md): es la fuente única
+de lo que bloquea el go-live, qué decisiones esperan a Luis, y qué NO se debe inventar.
+
 ## Build y ejecución
 - `npm install`
 - `cp .env.example .env.local` y llena los valores reales

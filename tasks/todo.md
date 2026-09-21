@@ -14,24 +14,26 @@
 - [x] Importación CSV/Excel con sinónimos de encabezado y errores por fila
 - [x] Job nocturno por Batch API (50% menos)
 - [x] Kanban del dealer apoyado en RLS
-- [x] 49 pruebas en verde + typecheck estricto limpio
-- [x] Prueba SQL de no-cruce entre tenants (evidencia de H-SEC)
+- [x] 58 pruebas en verde + typecheck estricto limpio + `next build` compila
+- [x] Prueba SQL de no-cruce entre tenants (escrita; **falta correrla** — ver S-2)
+- [x] Tres defectos de lo entregado, corregidos: adjunto sin asentar en el expediente,
+      columna `telefono_wa` que mentía, y remitente de WhatsApp mono-tenant
 
-## Siguiente — antes de la primera conversación real
+## Pendientes
 
-- [ ] **Calibrar el costo unitario** — medir una conversación de calificación real contra la API: turnos, tokens de entrada y salida, tasa de caché. Es barato y convierte el costo de supuesto en dato. *(Paralelizable con subagente: correr el turno y reportar métricas.)*
-- [ ] Auth del dealer (Supabase Auth) + middleware de sesión para `/kanban`
-- [ ] Pantalla de importación de inventario (hoy solo existe el endpoint)
-- [ ] Seed de un tenant de prueba con su ruleset vigente
-- [ ] Plantillas de WhatsApp (utility y marketing) aprobadas en Meta + el envío que registra `usage_events`
-- [ ] Job de retención: borrar documentos cuyo `retener_hasta` venció
+**El inventario completo vive en [`docs/PENDIENTES.md`](../docs/PENDIENTES.md)** — bloqueantes,
+decisiones de Luis, runbook de onboarding, deuda técnica y orden sugerido. Este archivo no lo
+duplica: solo lleva lo que está en curso ahora mismo.
 
-## Bloqueado por decisión de Luis
+### En curso
 
-- [ ] **H7 — multi-tenant vs H-DATA.** Los documentos rectores de Advantio (`CLAUDE.md`, `operacion/HARDSTOPS.md`) declaran deploy por cliente y aislamiento por instancia. Este producto es multi-tenant con RLS. Luis autorizó construir así; la enmienda no está aplicada y **bloquea H-SEC**.
-- [ ] **Decisión abierta #1 — lectura de documentos por visión.** Hoy solo se almacenan. Si se leen, hay que medir Haiku vs Sonnet 5 en extracción de cédula antes de elegir modelo.
-- [ ] Revalidar costo unitario después del **2026-10-01** (cambio de tarifas de Meta).
-- [ ] Verificar alcance de la Ley 172-13 de protección de datos de RD.
+_(nada en curso — el siguiente arranque toma de `docs/PENDIENTES.md`)_
+
+### Lo inmediato, si hay que elegir tres
+
+1. **P0-4 · Meta** — es el camino crítico y corre en calendario, no en horas de trabajo. Arranca hoy.
+2. **P0-1 · Auth del dealer** — sin sesión el Kanban se ve en blanco; hoy el panel es indemostrable.
+3. **D-1 · Enmienda H7** — decisión tuya; bloquea H-SEC y por tanto el go-live.
 
 ## Revisión — 2026-09-20
 

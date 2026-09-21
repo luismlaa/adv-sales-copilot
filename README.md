@@ -38,7 +38,7 @@ Para recibir mensajes en local, expón el puerto (por ejemplo con un túnel) y r
 ## Verificar
 
 ```bash
-npm test                 # 49 pruebas: motor de calificación, consumo, ventana 24h, importación
+npm test                 # 58 pruebas: calificación, consumo, ventana 24h, importación, expediente, remitente
 npx tsc --noEmit         # tipos en estricto
 psql "$DATABASE_URL" -f supabase/tests/no-cruce-entre-tenants.sql   # aislamiento entre dealers
 ```
@@ -62,6 +62,7 @@ Regla de consumo: primero lo incluido en la base del plan, luego los paquetes co
 - `CLAUDE.md` — reglas de trabajo sobre este repo, hardstops y arquitectura en corto
 - `docs/architecture.md` — decisiones de arquitectura y sus porqués
 - `prompts/CHANGELOG.md` — historial de versiones del prompt
+- `docs/PENDIENTES.md` — **todo lo que falta para salir a clientes**: bloqueantes, decisiones abiertas, runbook de onboarding
 - `tasks/todo.md` — plan vivo y revisión
 
 Brief de origen: `advantio/framework/mercado/ADV-advantio-BRIEF-202609.md`.
