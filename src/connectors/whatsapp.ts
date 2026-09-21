@@ -179,13 +179,18 @@ async function postGraph(path: string, body: unknown): Promise<{ messageId: stri
 /**
  * Responde dentro de la ventana de 24h. Gratis: Meta no cobra las respuestas
  * de servicio. Nunca usar esta via fuera de la ventana — el envio falla.
+ *
+ * @param desde `phone_number_id` del dealer que SALE como remitente. Es
+ * obligatorio y explicito: en multi-tenant, responder desde un numero fijo de
+ * configuracion haria que el cliente de un dealer recibiera la respuesta desde
+ * el numero de otro.
  */
 export async function enviarRespuesta(
+  desde: string,
   telefono: string,
   texto: string,
 ): Promise<{ messageId: string }> {
-  const env = serverEnv();
-  return postGraph(`${env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+  return postGraph(`${desde}/messages`, {
     messaging_product: "whatsapp",
     recipient_type: "individual",
     to: telefono,
@@ -200,15 +205,17 @@ export async function enviarRespuesta(
  *
  * Quien llama es responsable de registrar el evento de consumo con el
  * `messageId` devuelto como clave de idempotencia.
+ *
+ * @param desde `phone_number_id` del dealer remitente (ver `enviarRespuesta`).
  */
 export async function enviarPlantilla(
+  desde: string,
   telefono: string,
   plantilla: string,
   idioma: string,
   parametros: readonly string[],
 ): Promise<{ messageId: string }> {
-  const env = serverEnv();
-  return postGraph(`${env.WHATSAPP_PHONE_NUMBER_ID}/messages`, {
+  return postGraph(`${desde}/messages`, {
     messaging_product: "whatsapp",
     recipient_type: "individual",
     to: telefono,

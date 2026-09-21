@@ -216,7 +216,13 @@ export async function manejarMensajeEntrante(mensaje: MensajeNormalizado): Promi
     return;
   }
 
-  const enviado = await enviarRespuesta(mensaje.telefono, resultado.respuesta);
+  // Se responde DESDE el mismo numero al que el cliente escribio: ese numero
+  // es el del dealer que ya resolvimos, asi que el remitente nunca se cruza.
+  const enviado = await enviarRespuesta(
+    mensaje.phoneNumberId,
+    mensaje.telefono,
+    resultado.respuesta,
+  );
 
   await db.from("messages").insert({
     tenant_id: tenantId,
