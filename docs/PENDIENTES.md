@@ -4,7 +4,7 @@
 > y un dealer real usando el producto en producción. Es la fuente única: `tasks/todo.md`
 > lleva el plan del día a día y apunta aquí.
 >
-> Última revisión: **2026-09-20** · Commit `c5ffff5` · 58 pruebas en verde · `tsc --noEmit` limpio · `next build` compila
+> Última revisión: **2026-09-21** · rama `feat/dealer-demo-y-login` · 58 pruebas en verde · `tsc --noEmit` limpio · `next build` compila · migración y demo verificadas contra Supabase local
 
 ---
 
@@ -12,7 +12,7 @@
 
 | Pieza | Estado |
 |---|---|
-| Esquema con `tenant_id` en toda tabla + RLS forzada | Escrito, **nunca aplicado a una base real** |
+| Esquema con `tenant_id` en toda tabla + RLS forzada | Aplica limpio en Supabase local; RLS verificada (sin sesión 0 filas, con sesión las del dealer). Falta el proyecto real (P0-2) |
 | Motor determinista de pre-calificación | Funciona, 12 pruebas |
 | Herramientas `strict: true` + structured outputs | Funciona, 6 pruebas de contrato |
 | Prompt caching con corte estable/volátil | Funciona, instrumentado con `tasaCache()` |
@@ -21,7 +21,9 @@
 | Importación CSV/Excel con sinónimos | Funciona, 5 pruebas |
 | Contador `conversaciones_atendidas` | Funciona |
 | Contadores `recordatorios` y `reactivaciones` | **No se escriben nunca** — ver P1-1 |
-| Kanban del dealer | Renderiza, pero sin auth no muestra nada — ver P0-1 |
+| Kanban del dealer | Con login y dealer de ejemplo: muestra los 8 prospectos demo |
+| Login del dealer | Supabase Auth + middleware de sesión + `/login` |
+| Dealer de ejemplo | `npm run db:seed-demo` — idempotente |
 
 ---
 
@@ -29,13 +31,21 @@
 
 Ninguna de estas la puede tomar un agente. Todas son H7 o materia de hardstop.
 
-- [ ] **D-1 · Enmienda H7: multi-tenant vs H-DATA.**
+- [~] **D-1 · Enmienda H7: multi-tenant vs H-DATA.** Decidido 2026-09-21: pre-build y a medida no se rigen
+      por las mismas normas. Texto listo en [`decisiones/D-1-enmienda-h7.md`](decisiones/D-1-enmienda-h7.md);
+      falta aplicarlo en `advantio/` (la copia local está desincronizada del remoto).
       `advantio/CLAUDE.md` declara deploy por cliente y `operacion/HARDSTOPS.md` (H-DATA) exige
       aislamiento por instancia. Este producto es multi-tenant con RLS. Autorizaste construirlo
       así el 2026-09-20, pero **la enmienda no está redactada ni aplicada**.
       → *Bloquea H-SEC.* Mientras no exista, aprobar el go-live contradice tus propios documentos rectores.
 
-- [ ] **D-2 · Quién es dueño de la WABA.** Decide el modelo de facturación completo:
+- [~] **D-2 · Quién es dueño de la WABA.** Luis se inclina por **B (WABA por dealer)**, 2026-09-21.
+      Matices: B aísla la calificación de calidad entre dealers, pero no aísla más los datos, y
+      **no hace más rápido el alta** (cada dealer verifica su negocio y aprueba plantillas; Advantio
+      debe hacerse Tech Provider). Opciones de cobro con B: (1) Meta cobra al dealer y Advantio cobra
+      base + conversaciones + tarifa de servicio por plantilla — *recomendada*; (2) Solution Partner o
+      BSP con línea de crédito, Advantio revende con margen; (3) A primero, B con volumen.
+      **Falta que Luis elija la opción de cobro.** Texto original de la decisión: Decide el modelo de facturación completo:
       - **A · WABA de Advantio** — verificación una vez, plantillas una vez, **Meta te cobra a ti**,
         tus contadores *son* la factura. Riesgo: rating de calidad compartido, un dealer que abuse
         puede tumbar a todos.
@@ -52,26 +62,36 @@ Ninguna de estas la puede tomar un agente. Todas son H7 o materia de hardstop.
       columna. **Guardar tokens de terceros en la base es materia de H-DATA** — deliberadamente
       no lo inventé.
 
-- [ ] **D-4 · Lectura de documentos por visión.** Hoy solo se almacenan (decisión tuya, 2026-09-20).
+- [x] **D-4 · Lectura de documentos por visión.** Cerrado 2026-09-21: **solo se almacenan.**
       Si se activa, es ruta de dato regulado: el brief exige **medir Haiku vs Sonnet 5 en extracción
       de cédula antes de elegir modelo**, y H-SEC se reabre.
       → Punto de cambio aislado: `textoDelMensaje()` en `src/orchestrator/handle-inbound.ts`.
 
-- [ ] **D-5 · Alcance de la Ley 172-13** de protección de datos personales de RD. `[VERIFICAR]` en el brief.
+- [x] **D-5 · Alcance de la Ley 172-13.** Cerrado 2026-09-21 por Luis: no bloquea; solo se recopilan documentos.
+      Pendiente menor: consentimiento explícito del prospecto en el chat antes de pedir la cédula.
       → *Bloquea el contrato*, no el build.
 
 ---
 
 ## Bloque 1 · P0 — sin esto no funciona de punta a punta
 
-- [ ] **P0-1 · Auth del dealer.** Supabase Auth + middleware de refresco de sesión + pantalla de login.
+- [x] **P0-1 · Auth del dealer.** Hecho 2026-09-21 con usuario de ejemplo (correo + clave). Sin alta de vendedores ni recuperación de clave todavía. Supabase Auth + middleware de refresco de sesión + pantalla de login.
       **Es lo primero.** Sin sesión, RLS devuelve vacío y el Kanban se ve en blanco: hoy el panel
       es indemostrable ante un cliente. *(M)*
 
-- [ ] **P0-2 · Proyecto de Supabase creado y migración aplicada.**
+- [~] **P0-2 · Proyecto de Supabase creado y migración aplicada.** En curso (Luis). La migración ya se
+      probó limpia en Supabase local. `npx supabase login` falla fuera de una TTY; usar la vía sin login:
+      1. Crear el proyecto (`us-east-1`) y copiar URL, anon key y service_role key a `.env.local`
+      2. Authentication → desactivar "Allow new users to sign up"
+      3. Storage → bucket **privado** `expedientes` (cierra P0-6)
+      4. Connect → *Session pooler* URI, y en Terminal:
+         `npx supabase db push --db-url "postgresql://postgres.<ref>:<clave>@aws-0-<region>.pooler.supabase.com:5432/postgres"`
+         (clave sin `@ # / ?`; no usar la conexión directa `db.<ref>`, es solo IPv6)
+      5. Avisar → `npm run db:seed-demo` (P0-3)
+      Original:
       `supabase/migrations/0001_init.sql` nunca ha corrido contra una base real. *(S)*
 
-- [ ] **P0-3 · Seed de un tenant completo**: dealer + ruleset **vigente** + plan con cupos base +
+- [x] **P0-3 · Seed de un tenant completo** — `scripts/seed-demo.ts`. Correr contra el proyecto real al cerrar P0-2.: dealer + ruleset **vigente** + plan con cupos base +
       usuario en `tenant_members`.
       Sin ruleset vigente el webhook lanza excepción en el primer mensaje. *(S)*
 
@@ -88,6 +108,9 @@ Ninguna de estas la puede tomar un agente. Todas son H7 o materia de hardstop.
 ---
 
 ## Bloque 2 · P0 de seguridad — sin esto no hay H-SEC
+
+> **Etapa 2** (decisión 2026-09-21). Con la enmienda D-1 estos puntos son parte de H-DATA-PB:
+> la etapa 2 va antes del primer dealer con datos reales, no después.
 
 - [ ] **S-1 · Políticas RLS sobre `storage.objects`.**
       Hoy el aislamiento de los binarios depende de la convención de ruta
@@ -111,7 +134,10 @@ Ninguna de estas la puede tomar un agente. Todas son H7 o materia de hardstop.
 
 ## Bloque 3 · P1 — sin esto no cobras bien ni operas
 
-- [ ] **P1-1 · Recordatorios y reactivaciones.** ⚠️ **Hueco de facturación conocido.**
+- [ ] **P1-1 · Recordatorios y reactivaciones.** Bloqueado por la opción de cobro de D-2. Preguntas
+      abiertas a Luis (2026-09-21): qué es recordatorio (propuesta: documentos pendientes, *utility*) y
+      qué es reactivación; cadencia y tope por lead; envío automático o aprobado por el vendedor;
+      qué pasa al agotar base + paquetes; solo en horario del dealer. ⚠️ **Hueco de facturación conocido.**
       `enviarPlantilla()` existe y **nadie la llama**; `usage_events` solo se escribe para
       `conversaciones_atendidas`. **De los tres conceptos que cobras, hoy solo se cuenta uno.**
       Falta: el disparador (lead tibio sin respuesta en N horas), las plantillas aprobadas, y el
@@ -125,7 +151,10 @@ Ninguna de estas la puede tomar un agente. Todas son H7 o materia de hardstop.
       API: turnos, tokens de entrada y salida, tasa de caché. Es barato y convierte el precio de
       supuesto en dato. Precedente: se hizo con `atencion-ia` el 2026-07-31. *(S)*
 
-- [ ] **P1-4 · Revalidar tarifas de WhatsApp después del 2026-10-01** (cambio anunciado por Meta).
+- [ ] **P1-4 · Revalidar tarifas de WhatsApp después del 2026-10-01.** Confirmado: desde esa fecha los
+      mensajes de servicio (respuestas dentro de la ventana de 24h) **se cobran** pasados 1.000 gratis por
+      número al mes, igual que las plantillas *utility* enviadas dentro de la ventana. Rompe el supuesto
+      "responder es gratis" de `conversation-window.ts`. Con WABA por dealer ese costo lo paga el dealer.
       → *Bloquea H-PRICE* si el costo sube. *(S)*
 
 - [ ] **P1-5 · Vista de expediente por lead.** Abrir la tarjeta, ver los documentos, y **reasignar
@@ -192,6 +221,11 @@ es un producto de catálogo — es una consultoría con más pasos.
 ---
 
 ## Deuda técnica conocida
+
+- ~~`pedirDocumentos` usaba upsert contra un índice único parcial~~ — corregido 2026-09-21. Postgres
+  rechaza ese `ON CONFLICT`; la herramienta fallaba siempre y el checklist nunca se creaba.
+- **Comprador de contado evaluado como si financiara.** El motor exige ingreso y antigüedad aunque
+  `forma_pago = contado` y devuelve `revisar`. Pendiente de decisión de producto.
 
 - **Datos del dealer hardcodeados en el turno.** `handle-inbound.ts` pasa horario y dirección
   literales (`"lunes a sabado, 8:00 am a 6:00 pm"`, `"consultar con el vendedor"`). Deben salir de

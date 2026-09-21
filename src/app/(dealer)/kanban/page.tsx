@@ -1,4 +1,5 @@
 import { dealerClient } from "@/connectors/supabase-server";
+import { cerrarSesion } from "@/app/login/actions";
 import type { Etapa, Semaforo, Temperatura } from "@/schemas/lead";
 
 export const dynamic = "force-dynamic";
@@ -47,6 +48,9 @@ const ETIQUETA_SEMAFORO: Readonly<Record<Semaforo, string>> = {
 export default async function KanbanPage() {
   const db = await dealerClient();
 
+  // RLS devuelve solo el dealer al que pertenece el usuario.
+  const { data: dealer } = await db.from("tenants").select("nombre").maybeSingle<{ nombre: string }>();
+
   const { data, error } = await db
     .from("leads")
     .select(
@@ -69,6 +73,14 @@ export default async function KanbanPage() {
 
   return (
     <main>
+      <header className="cabecera">
+        <span className="dealer">{dealer?.nombre ?? "Sin concesionario asignado"}</span>
+        <form action={cerrarSesion}>
+          <button type="submit" className="boton-secundario">
+            Salir
+          </button>
+        </form>
+      </header>
       <h1>Tablero de prospectos</h1>
       <p className="subtitulo">
         Ordenado por lo último que se movió. Las tarjetas calientes tienen el expediente completo.
