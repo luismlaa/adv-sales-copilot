@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://advantio.do/schemas/tenant-rules.schema.json",
+  "title": "Reglas de pre-calificacion por dealer",
+  "description": "Configuracion, no prompt. Una tool determinista evalua estas reglas; el modelo nunca decide si un prospecto califica. La decision crediticia final es del banco.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "moneda", "ingreso_minimo_mensual", "inicial_minima_pct", "antiguedad_laboral_minima_meses", "marcas_financiables", "documentos_requeridos"],
+  "properties": {
+    "version": { "type": "integer", "minimum": 1 },
+    "moneda": { "enum": ["DOP", "USD"] },
+    "ingreso_minimo_mensual": {
+      "type": "number",
+      "minimum": 0,
+      "description": "Ingreso mensual declarado minimo, en la moneda del ruleset."
+    },
+    "inicial_minima_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Porcentaje minimo del precio del vehiculo que el prospecto debe dar de inicial."
+    },
+    "antiguedad_laboral_minima_meses": { "type": "integer", "minimum": 0 },
+    "edad_minima": { "type": "integer", "minimum": 18, "default": 18 },
+    "edad_maxima": { "type": "integer", "maximum": 100 },
+    "relacion_cuota_ingreso_maxima_pct": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Cuota estimada / ingreso mensual. Sobre este techo, el semaforo baja a revisar."
+    },
+    "marcas_financiables": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "description": "Lista vacia no se admite. Usar ['*'] para financiar toda marca."
+    },
+    "anio_minimo_vehiculo": { "type": "integer", "minimum": 1950 },
+    "acepta_intercambio": { "type": "boolean", "default": true },
+    "documentos_requeridos": {
+      "type": "array",
+      "items": {
+        "enum": ["cedula_frontal", "cedula_dorsal", "carta_trabajo", "estado_cuenta", "licencia"]
+      },
+      "minItems": 1
+    },
+    "retencion_documentos_dias": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 365,
+      "default": 90,
+      "description": "Dias que se conserva un documento de identidad antes del borrado automatico."
+    },
+    "mensaje_no_califica": {
+      "type": "string",
+      "description": "Texto que el copiloto usa cuando el prospecto no pasa el pre-filtro. Nunca menciona una decision de credito."
+    }
+  }
+}

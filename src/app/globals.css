@@ -1,0 +1,143 @@
+:root {
+  color-scheme: light dark;
+  --fondo: #f6f7f9;
+  --tarjeta: #ffffff;
+  --borde: #e3e6ea;
+  --texto: #14181d;
+  --tenue: #5d6873;
+  --caliente: #c2410c;
+  --tibio: #a16207;
+  --frio: #475569;
+  --califica: #15803d;
+  --revisar: #a16207;
+  --no-califica: #b91c1c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fondo: #0f1216;
+    --tarjeta: #171b21;
+    --borde: #262c34;
+    --texto: #e8ecf1;
+    --tenue: #9aa5b1;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+main {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 20px;
+  margin: 0 0 4px;
+}
+
+.subtitulo {
+  color: var(--tenue);
+  margin: 0 0 24px;
+  font-size: 14px;
+}
+
+.tablero {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(220px, 1fr));
+  gap: 12px;
+  overflow-x: auto;
+}
+
+@media (max-width: 900px) {
+  .tablero {
+    grid-template-columns: 1fr;
+  }
+}
+
+.columna h2 {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--tenue);
+  margin: 0 0 8px;
+}
+
+.tarjeta {
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 8px;
+}
+
+.tarjeta h3 {
+  font-size: 15px;
+  margin: 0 0 6px;
+}
+
+.tarjeta dl {
+  margin: 0;
+  font-size: 13px;
+  color: var(--tenue);
+}
+
+.etiqueta {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+}
+
+.temp-caliente { color: var(--caliente); }
+.temp-tibio { color: var(--tibio); }
+.temp-frio { color: var(--frio); }
+
+.sem-califica { color: var(--califica); }
+.sem-revisar { color: var(--revisar); }
+.sem-no_califica { color: var(--no-califica); }
+
+.checklist {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  font-size: 13px;
+}
+
+.checklist li {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.aviso-legal {
+  margin-top: 24px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--borde);
+  color: var(--tenue);
+  font-size: 13px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

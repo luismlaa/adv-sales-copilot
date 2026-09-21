@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "moneda": "DOP",
+  "ingreso_minimo_mensual": 45000,
+  "inicial_minima_pct": 20,
+  "antiguedad_laboral_minima_meses": 12,
+  "edad_minima": 21,
+  "edad_maxima": 70,
+  "relacion_cuota_ingreso_maxima_pct": 35,
+  "marcas_financiables": ["Toyota", "Honda", "Hyundai", "Kia", "Nissan", "Mazda"],
+  "anio_minimo_vehiculo": 2015,
+  "acepta_intercambio": true,
+  "documentos_requeridos": ["cedula_frontal", "cedula_dorsal", "carta_trabajo"],
+  "retencion_documentos_dias": 90,
+  "mensaje_no_califica": "Con lo que me comentas todavia no podemos armarte el expediente de financiamiento aqui. Si quieres seguimos por la via de contado o con una inicial mayor, y te paso opciones."
+}

@@ -1,0 +1,41 @@
+# dependencias
+node_modules/
+.pnp/
+.pnp.js
+
+# build
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# entorno y secretos — NUNCA en git
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+supabase/.temp/
+supabase/.branches/
+
+# logs
+logs/
+*.log
+npm-debug.log*
+
+# grafo de codigo (se regenera con /graphify . --obsidian)
+graphify-out/
+.obsidian/workspace*
+
+# git worktrees (viven fuera del repo; esto es red de seguridad)
+*-wt/
+.worktrees/
+
+# personal
+.claude/settings.local.json
+.DS_Store
+.vscode/
+.idea/
+coverage/
