@@ -10,6 +10,12 @@ import { crearPuertos } from "./ports";
 import { parseTenantRules } from "@/schemas/tenant-rules";
 import { expiraEn, modoDeSalida } from "@/domain/conversation-window";
 import { periodoDe, claveIdempotencia } from "@/domain/usage";
+import {
+  atribuirDocumento,
+  marcadorDeAdjunto,
+  type Atribucion,
+} from "@/domain/document-intake";
+import type { DocumentoRequerido } from "@/schemas/tenant-rules";
 import { serverEnv } from "@/config/env";
 import { logAccion, logger } from "@/lib/logger";
 import { tasaCache } from "@/agent/client";
@@ -41,7 +47,7 @@ export async function manejarMensajeEntrante(mensaje: MensajeNormalizado): Promi
   const { data: tenant } = await db
     .from("tenants")
     .select("id, nombre, zona_horaria")
-    .eq("telefono_wa", mensaje.phoneNumberId)
+    .eq("wa_phone_number_id", mensaje.phoneNumberId)
     .eq("activo", true)
     .maybeSingle<Tenant>();
 
@@ -249,18 +255,25 @@ async function textoDelMensaje(
     // el documento se guarda cifrado en Storage y lo mira el vendedor. No
     // entra dato de identidad al modelo. Si mas adelante se lee por vision,
     // hay que medir Haiku vs Sonnet 5 en extraccion de cedula antes de elegir.
-    await guardarAdjunto(mensaje.contenido.mediaId, tenantId, leadId);
-    return "[El cliente envio una foto o documento. Se guardo en el expediente; agradecele y sigue.]";
+    const atribucion = await guardarAdjunto(mensaje.contenido.mediaId, tenantId, leadId);
+    return marcadorDeAdjunto(atribucion);
   }
 
   return `[El cliente envio un mensaje de tipo ${mensaje.contenido.original}, que no podemos leer. Pidele que lo escriba.]`;
 }
 
+/**
+ * Guarda el adjunto en Storage y lo asienta en el expediente.
+ *
+ * Las dos mitades importan: sin la fila en `lead_documents` el binario queda
+ * huerfano en Storage, el checklist del vendedor nunca se llena y el semaforo
+ * no puede llegar a `califica` con expediente completo.
+ */
 async function guardarAdjunto(
   mediaId: string,
   tenantId: string,
   leadId: string,
-): Promise<void> {
+): Promise<Atribucion> {
   const db = serviceClient();
   const env = serverEnv();
   const { bytes, mime } = await descargarMedia(mediaId);
@@ -272,15 +285,62 @@ async function guardarAdjunto(
   });
   if (error !== null) throw new Error(`No se pudo guardar el adjunto: ${error.message}`);
 
+  // A que casilla entra: el documento pedido mas antiguo que sigue pendiente.
+  const { data: pendientes } = await db
+    .from("lead_documents")
+    .select("tipo, creado_en")
+    .eq("tenant_id", tenantId)
+    .eq("lead_id", leadId)
+    .eq("estado", "pendiente")
+    .order("creado_en", { ascending: true });
+
+  const atribucion = atribuirDocumento(
+    (pendientes ?? []).map((d) => ({
+      tipo: d.tipo as DocumentoRequerido,
+      creadoEn: new Date(d.creado_en as string),
+    })),
+  );
+
+  const ahora = new Date();
+  const fila = {
+    tenant_id: tenantId,
+    lead_id: leadId,
+    tipo: atribucion.tipo,
+    estado: "recibido" as const,
+    storage_path: `${env.SUPABASE_DOCS_BUCKET}/${ruta}`,
+    mime,
+    bytes: bytes.byteLength,
+    subido_en: ahora.toISOString(),
+  };
+
+  if (atribucion.certeza === "sin_clasificar") {
+    // `otro` esta fuera del indice unico: varios adjuntos sin clasificar
+    // conviven hasta que el vendedor los asigne. Necesita su retencion propia.
+    const retenerHasta = new Date(ahora);
+    retenerHasta.setDate(retenerHasta.getDate() + 90);
+    await db
+      .from("lead_documents")
+      .insert({ ...fila, retener_hasta: retenerHasta.toISOString().slice(0, 10) });
+  } else {
+    await db
+      .from("lead_documents")
+      .update(fila)
+      .eq("tenant_id", tenantId)
+      .eq("lead_id", leadId)
+      .eq("tipo", atribucion.tipo);
+  }
+
   logAccion({
     tenantId,
     actor: "sistema",
     accion: "documento_recibido",
     entidad: "lead",
     entidadId: leadId,
-    motivo: "El prospecto subio un documento por el chat",
-    metadata: { mime, bytes: bytes.byteLength },
+    motivo: `El prospecto subio un documento; se atribuyo por ${atribucion.certeza}`,
+    metadata: { tipo: atribucion.tipo, mime, bytes: bytes.byteLength },
   });
+
+  return atribucion;
 }
 
 /** Inserta el evento facturable. El trigger de la base actualiza el agregado. */

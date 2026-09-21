@@ -20,7 +20,9 @@ create table tenants (
   id              uuid primary key default gen_random_uuid(),
   slug            text not null unique check (slug ~ '^[a-z0-9-]{3,48}$'),
   nombre          text not null,
-  telefono_wa     text not null unique,   -- numero de WhatsApp Business del dealer
+  -- ID del numero en la Cloud API (no el numero en si): es lo que trae el
+  -- webhook de Meta en metadata.phone_number_id y por lo que resolvemos el dealer.
+  wa_phone_number_id text not null unique,
   zona_horaria    text not null default 'America/Santo_Domingo',
   activo          boolean not null default true,
   creado_en       timestamptz not null default now()
@@ -201,9 +203,15 @@ create table lead_documents (
   retener_hasta   date not null,
   borrado_en      timestamptz,
   subido_en       timestamptz,
-  creado_en       timestamptz not null default now(),
-  unique (tenant_id, lead_id, tipo)
+  creado_en       timestamptz not null default now()
 );
+
+-- Un documento clasificado por tipo es unico por lead. `otro` queda fuera del
+-- indice a proposito: mientras no leamos los documentos por vision no podemos
+-- clasificarlos, y varios adjuntos sin clasificar deben poder convivir hasta
+-- que el vendedor los asigne.
+create unique index lead_documents_tipo_uniq
+  on lead_documents (tenant_id, lead_id, tipo) where tipo <> 'otro';
 
 create index lead_documents_retencion on lead_documents (retener_hasta)
   where borrado_en is null and estado = 'recibido';

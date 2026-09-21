@@ -22,7 +22,7 @@ values
   ('22222222-2222-4222-8222-222222222222', 'vendedor@dealer-b.test')
 on conflict (id) do nothing;
 
-insert into tenants (id, slug, nombre, telefono_wa) values
+insert into tenants (id, slug, nombre, wa_phone_number_id) values
   ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'dealer-a', 'Dealer A', '10000000001'),
   ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb', 'dealer-b', 'Dealer B', '10000000002');
 
