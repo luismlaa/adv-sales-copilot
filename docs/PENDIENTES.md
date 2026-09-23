@@ -4,7 +4,7 @@
 > y un dealer real usando el producto en producción. Es la fuente única: `tasks/todo.md`
 > lleva el plan del día a día y apunta aquí.
 >
-> Última revisión: **2026-09-21** · rama `feat/dealer-demo-y-login` · 58 pruebas en verde · `tsc --noEmit` limpio · `next build` compila · migración y demo verificadas contra Supabase local
+> Última revisión: **2026-09-23** · rama `feat/dealer-demo-y-login` · 58 pruebas en verde · `tsc --noEmit` limpio · `next build` compila · migración y demo verificadas contra Supabase local · proyecto real creado y migrado (P0-2)
 
 ---
 
@@ -12,7 +12,7 @@
 
 | Pieza | Estado |
 |---|---|
-| Esquema con `tenant_id` en toda tabla + RLS forzada | Aplica limpio en Supabase local; RLS verificada (sin sesión 0 filas, con sesión las del dealer). Falta el proyecto real (P0-2) |
+| Esquema con `tenant_id` en toda tabla + RLS forzada | Aplica limpio en Supabase local; RLS verificada (sin sesión 0 filas, con sesión las del dealer). Migración aplicada en el proyecto real (P0-2, 2026-09-23) |
 | Motor determinista de pre-calificación | Funciona, 12 pruebas |
 | Herramientas `strict: true` + structured outputs | Funciona, 6 pruebas de contrato |
 | Prompt caching con corte estable/volátil | Funciona, instrumentado con `tasaCache()` |
@@ -79,17 +79,10 @@ Ninguna de estas la puede tomar un agente. Todas son H7 o materia de hardstop.
       **Es lo primero.** Sin sesión, RLS devuelve vacío y el Kanban se ve en blanco: hoy el panel
       es indemostrable ante un cliente. *(M)*
 
-- [~] **P0-2 · Proyecto de Supabase creado y migración aplicada.** En curso (Luis). La migración ya se
-      probó limpia en Supabase local. `npx supabase login` falla fuera de una TTY; usar la vía sin login:
-      1. Crear el proyecto (`us-east-1`) y copiar URL, anon key y service_role key a `.env.local`
-      2. Authentication → desactivar "Allow new users to sign up"
-      3. Storage → bucket **privado** `expedientes` (cierra P0-6)
-      4. Connect → *Session pooler* URI, y en Terminal:
-         `npx supabase db push --db-url "postgresql://postgres.<ref>:<clave>@aws-0-<region>.pooler.supabase.com:5432/postgres"`
-         (clave sin `@ # / ?`; no usar la conexión directa `db.<ref>`, es solo IPv6)
-      5. Avisar → `npm run db:seed-demo` (P0-3)
-      Original:
-      `supabase/migrations/0001_init.sql` nunca ha corrido contra una base real. *(S)*
+- [x] **P0-2 · Proyecto de Supabase creado y migración aplicada.** Cerrado 2026-09-23 por Luis.
+      Proyecto `zrvstevcddpiihfpxoup` con `0001_init.sql` aplicada (vía *Session pooler*, sin
+      `supabase login`). Pendiente de verificación independiente: correr S-2 contra esta base.
+      Siguiente: `npm run db:seed-demo` contra el proyecto real (P0-3). *(S)*
 
 - [x] **P0-3 · Seed de un tenant completo** — `scripts/seed-demo.ts`. Correr contra el proyecto real al cerrar P0-2.: dealer + ruleset **vigente** + plan con cupos base +
       usuario en `tenant_members`.
