@@ -17,6 +17,7 @@
     "test:watch": "vitest",
     "db:push": "supabase db push",
     "db:reset": "supabase db reset",
+    "db:seed-demo": "tsx --env-file=.env.local scripts/seed-demo.ts",
     "batch:nightly": "tsx src/jobs/nightly-summaries.ts"
   },
   "dependencies": {

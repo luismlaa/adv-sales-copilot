@@ -27,7 +27,15 @@ duplica: solo lleva lo que está en curso ahora mismo.
 
 ### En curso
 
-_(nada en curso — el siguiente arranque toma de `docs/PENDIENTES.md`)_
+- [x] Dealer de ejemplo (`npm run db:seed-demo`) + login del dealer — verificado contra Supabase local
+- [x] Fix: `pedirDocumentos` fallaba siempre (upsert contra índice parcial)
+- [x] D-1: enmienda redactada en `docs/decisiones/D-1-enmienda-h7.md` (falta aplicarla en `advantio/`)
+- [x] P0-2: proyecto de Supabase creado y migración aplicada (Luis, 2026-09-23)
+- [x] P0-3: seed corrido en el proyecto real (verificado 2026-09-23)
+- [x] P0-6: bucket privado `expedientes` creado (verificado 2026-09-23)
+- [ ] S-2: correr la prueba de no-cruce contra el proyecto real
+- [ ] D-2: Luis elige la opción de cobro → desbloquea P1-1
+- [ ] Decisión de producto: ¿el comprador de contado salta el semáforo de financiamiento?
 
 ### Lo inmediato, si hay que elegir tres
 

@@ -152,18 +152,35 @@ export function crearPuertos(db: SupabaseClient, ctx: ContextoLead): PuertosCopi
       const retenerHasta = new Date();
       retenerHasta.setDate(retenerHasta.getDate() + ctx.reglas.retencion_documentos_dias);
 
-      const filas = documentos.map((tipo) => ({
-        tenant_id: tenantId,
-        lead_id: ctx.leadId,
-        tipo,
-        estado: "pendiente" as const,
-        retener_hasta: retenerHasta.toISOString().slice(0, 10),
-      }));
-
-      const { error } = await db
+      // No se puede usar upsert: la unicidad por tipo es un indice PARCIAL
+      // (excluye `otro`) y Postgres no lo infiere en ON CONFLICT sin su
+      // predicado, que PostgREST no sabe mandar. Se insertan solo los que faltan.
+      const { data: existentes, error: errLeer } = await db
         .from("lead_documents")
-        .upsert(filas, { onConflict: "tenant_id,lead_id,tipo", ignoreDuplicates: true });
-      if (error !== null) throw new Error(`No se pudieron marcar documentos: ${error.message}`);
+        .select("tipo")
+        .eq("tenant_id", tenantId)
+        .eq("lead_id", ctx.leadId)
+        .in("tipo", documentos);
+      if (errLeer !== null) throw new Error(`No se pudo leer el expediente: ${errLeer.message}`);
+
+      const yaPedidos = new Set((existentes ?? []).map((d) => d.tipo as string));
+      const filas = [...new Set(documentos)]
+        .filter((tipo) => !yaPedidos.has(tipo))
+        .map((tipo) => ({
+          tenant_id: tenantId,
+          lead_id: ctx.leadId,
+          tipo,
+          estado: "pendiente" as const,
+          retener_hasta: retenerHasta.toISOString().slice(0, 10),
+        }));
+
+      if (filas.length > 0) {
+        const { error } = await db.from("lead_documents").insert(filas);
+        // 23505: otro turno concurrente ya lo pidio. El expediente queda igual.
+        if (error !== null && error.code !== "23505") {
+          throw new Error(`No se pudieron marcar documentos: ${error.message}`);
+        }
+      }
 
       logAccion({
         tenantId,

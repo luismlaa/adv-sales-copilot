@@ -141,3 +141,63 @@ h1 {
   white-space: nowrap;
   border: 0;
 }
+
+/* ── Sesion ─────────────────────────────────────────────────────────────── */
+
+.cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.cabecera .dealer {
+  font-weight: 600;
+  color: var(--tenue);
+}
+
+button {
+  font: inherit;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--borde);
+  background: var(--texto);
+  color: var(--fondo);
+  cursor: pointer;
+}
+
+.boton-secundario {
+  background: transparent;
+  color: var(--texto);
+}
+
+.login {
+  max-width: 360px;
+  margin-top: 12vh;
+}
+
+.login-form {
+  display: grid;
+  gap: 12px;
+}
+
+.login-form label {
+  display: grid;
+  gap: 4px;
+  font-size: 14px;
+}
+
+.login-form input {
+  font: inherit;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--borde);
+  background: var(--tarjeta);
+  color: var(--texto);
+}
+
+.login-error {
+  color: var(--no-califica);
+  margin: 0;
+  font-size: 14px;
+}
