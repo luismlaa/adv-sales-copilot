@@ -39,21 +39,27 @@ Ninguna de estas la puede tomar un agente. Todas son H7 o materia de hardstop.
       así el 2026-09-20, pero **la enmienda no está redactada ni aplicada**.
       → *Bloquea H-SEC.* Mientras no exista, aprobar el go-live contradice tus propios documentos rectores.
 
-- [x] **D-2 · Quién es dueño de la WABA.** Cerrado 2026-09-23 por Luis: **A · WABA de Advantio.**
-      Se descarta B. Consecuencias:
-      - Una verificación de negocio y una aprobación de plantillas, ambas de Advantio.
-      - **Meta le cobra a Advantio**: tus contadores (`usage_events`) *son* la factura al dealer.
-      - Hay que registrar un método de pago en la WABA. El costo de Meta entra al pricing (H-PRICE, P1-4).
-      - Riesgo aceptado: la calificación de calidad del número es compartida; un dealer que abuse
-        afecta a todos. Mitigarlo con P2-2 (topes por tenant) y P1-7 (alertas).
-      - Sin Tech Provider ni Embedded Signup.
+- [x] **D-2 · Quién es dueño de la WABA.** Cerrado 2026-09-23 por Luis: **B · WABA por dealer**,
+      con la **opción de cobro (1)**. Brevemente se registró A, pero se descartó el mismo día: Meta
+      exige que el *display name* de cada número tenga relación con el negocio verificado dueño de la
+      WABA. Con A, el número de cada dealer tendría que mostrarse como Advantio, y ningún dealer lo acepta.
+      - **Meta le cobra al dealer** directo (su tarjeta en su WABA): plantillas y servicio por encima
+        del cupo gratis. Advantio **no revende Meta**.
+      - **Advantio cobra su software**: base + conversaciones atendidas (+ lo que se decida para
+        recordatorios, ver P1-1). El margen se calcula sobre los costos propios (Anthropic, Supabase,
+        operación), no sobre Meta; H-PRICE se cumple igual.
+      - `usage_events` sigue siendo la factura de Advantio. Sin cambio de esquema.
+      - Advantio necesita verificación de negocio + App Review (acceso avanzado a `whatsapp_business_*`)
+        para operar WABAs ajenas a escala. Tech Provider + Embedded Signup es el camino de onboarding.
+      - **Piloto sin esperar la verificación de Advantio:** el dealer crea y verifica su WABA con su RNC
+        y la comparte con el portafolio de Advantio.
+      - Opción descartada, (2) revender vía BSP con una sola factura: riesgo de crédito + comisión del BSP.
+      - [ ] **Pendiente de Luis:** reescribir §4 del brief y la propuesta al dealer (dos facturas: Meta + Advantio).
 
-- [x] **D-3 · Dónde viven los access tokens de WhatsApp.** Cerrado por D-2 = A (2026-09-23):
-      **un token global de system user en `.env`**, solo servidor. No se guardan tokens de terceros.
-      Queda como referencia por si algún día se migra a B: Con el modelo B, cada dealer trae el suyo
-      y hay que decidir el almacén: Supabase Vault, un secret manager externo, o cifrado en
-      columna. **Guardar tokens de terceros en la base es materia de H-DATA** — deliberadamente
-      no lo inventé.
+- [ ] **D-3 · Dónde viven los access tokens de WhatsApp.** **Reabierto** 2026-09-23 por D-2 = B.
+      Cada dealer trae el suyo, y hay que decidir el almacén: Supabase Vault, un secret manager
+      externo, o cifrado en columna. **Guardar tokens de terceros en la base es materia de H-DATA** —
+      deliberadamente no lo inventé. Para el piloto (un dealer) basta `.env`. Bloquea el segundo dealer.
 
 - [x] **D-4 · Lectura de documentos por visión.** Cerrado 2026-09-21: **solo se almacenan.**
       Si se activa, es ruta de dato regulado: el brief exige **medir Haiku vs Sonnet 5 en extracción
@@ -125,8 +131,9 @@ Ninguna de estas la puede tomar un agente. Todas son H7 o materia de hardstop.
 
 ## Bloque 3 · P1 — sin esto no cobras bien ni operas
 
-- [ ] **P1-1 · Recordatorios y reactivaciones.** D-2 cerrado (A: Meta cobra a Advantio). Siguen abiertas las preguntas
-      abiertas a Luis (2026-09-21): qué es recordatorio (propuesta: documentos pendientes, *utility*) y
+- [ ] **P1-1 · Recordatorios y reactivaciones.** D-2 cerrado (B: Meta le cobra la plantilla al dealer).
+      Nueva pregunta: ¿Advantio cobra una tarifa de servicio por recordatorio o lo incluye en el plan?
+      Siguen abiertas las preguntas a Luis (2026-09-21): qué es recordatorio (propuesta: documentos pendientes, *utility*) y
       qué es reactivación; cadencia y tope por lead; envío automático o aprobado por el vendedor;
       qué pasa al agotar base + paquetes; solo en horario del dealer. ⚠️ **Hueco de facturación conocido.**
       `enviarPlantilla()` existe y **nadie la llama**; `usage_events` solo se escribe para
@@ -186,31 +193,32 @@ Ninguna de estas la puede tomar un agente. Todas son H7 o materia de hardstop.
 - Un número propio registrado en la Cloud API — un número vive en una sola cuenta a la vez, no se comparte ni se recicla
 - Revisión del *display name* de ese número por Meta
 
-**Lo que depende de D-2:** verificación de negocio, aprobación de plantillas y a quién le cobra Meta.
+**Con D-2 = B, además por cada dealer:** verificación de *su* negocio (su RNC), *sus* plantillas
+aprobadas en *su* WABA, su método de pago con Meta, y un token de acceso para Advantio (D-3).
 
 > Verifica contra la documentación vigente de Meta antes de comprometerte: los nombres de programa
 > y los requisitos cambian, y el brief ya avisa del cambio de tarifas del 2026-10-01.
 
 ### Cómo arrancar la verificación de Meta (P0-4) — lo hace Luis
 
-Con D-2 = A, todo se hace una sola vez y a nombre de Advantio.
+Con D-2 = B, esto es la parte de Advantio (una sola vez). Cada dealer verifica su propio negocio aparte.
 
 1. **Portafolio comercial de Advantio** → https://business.facebook.com/ (crearlo si no existe,
    con el nombre legal exacto de la empresa).
 2. **Verificación del negocio** → https://business.facebook.com/settings/security
    (*Centro de seguridad → Iniciar verificación*). Ayuda: https://www.facebook.com/business/help/2058515294227817
-   Ten a mano:
-   - nombre legal, dirección y teléfono **idénticos** a los del documento;
-   - documento oficial: certificado de RNC (DGII) o registro mercantil;
-   - sitio web en un dominio propio, y un correo en ese dominio o un DNS TXT para comprobarlo.
+   Verificar **como negocio "Advantio"**, no como persona: el *display name* se ata al negocio verificado.
+   - Documento principal: **certificado de nombre comercial "Advantio" de ONAPI** (a nombre de Luis).
+   - Dirección y teléfono: facturas de servicios, copiados **al carácter** en el formulario.
+   - Sitio: https://advantio.web.app/ con nombre, dirección o teléfono y contacto visibles; intentar
+     verificarlo con la etiqueta `<meta>`. Confirmación por teléfono/SMS (no hay correo en dominio propio).
+   - Plan B si Meta rechaza ONAPI: inscribirse en DGII como persona física (la cédula funciona como RNC).
 3. **App de Meta** → https://developers.facebook.com/apps → *Crear app* → tipo *Business* → agregar
    el producto **WhatsApp**. Eso da un número de prueba para avanzar P0-5 sin esperar la verificación.
    Guía: https://developers.facebook.com/docs/whatsapp/cloud-api/get-started
-4. **Método de pago en la WABA** (D-2 = A: Meta le cobra a Advantio).
-   Documentos que tiene Luis para el paso 2 (2026-09-23): cédula, facturas de servicios a su nombre
-   y el **certificado de nombre comercial "Advantio" de ONAPI** a su nombre. No tiene RNC ni dominio propio;
-   el sitio es https://advantio.web.app/. El RNC de persona física (la cédula, inscrita en DGII) es
-   opcional y se usa solo si Meta rechaza el certificado de ONAPI.
+4. **Tech Provider + App Review** (después del paso 2) →
+   https://developers.facebook.com/docs/whatsapp/solution-providers/get-started-for-tech-providers
+   Es lo que permite el alta de dealers por Embedded Signup. No bloquea el piloto (ver D-2).
 5. Cuando exista la app, pásale al agente `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` y el
    `phone_number_id` de prueba para cerrar P0-5. Los secretos van en `.env.local`, no en el chat.
 
@@ -220,7 +228,8 @@ Con D-2 = A, todo se hace una sola vez y a nombre de Advantio.
 
 Una vez cerrados el Bloque 0 al 2, dar de alta un dealer debería ser esto y nada más:
 
-1. Conectar su número a la Cloud API → anotar su `phone_number_id`
+1. El dealer verifica su negocio y conecta su WABA y su número (Embedded Signup, o compartiendo la
+   WABA en el piloto) → anotar su `phone_number_id` y guardar su token según D-3
 2. `insert into tenants` con ese `wa_phone_number_id` y su zona horaria
 3. Cargar su ruleset de pre-calificación y marcarlo `vigente`
 4. `insert into tenant_plan` con los cupos base contratados
@@ -255,6 +264,7 @@ es un producto de catálogo — es una consultoría con más pasos.
 
 Ninguna de estas es un olvido; cada una espera una decisión del Bloque 0:
 
+- Almacén de tokens de WhatsApp por dealer → **D-3**
 - Clasificación de documentos por visión → **D-4**
 - Enmienda a los documentos rectores de Advantio → **D-1**, y además nada de este repo debe escribir en `advantio/`
 
@@ -262,7 +272,7 @@ Ninguna de estas es un olvido; cada una espera una decisión del Bloque 0:
 
 ## Lo que el agente puede resolver sin Meta ni decisiones de Luis
 
-Revisado 2026-09-23. Nada de esta lista depende de P0-4 ni de la decisión sobre el comprador de contado.
+Revisado 2026-09-23. Nada de esta lista depende de P0-4, D-3 ni de la decisión sobre el comprador de contado.
 Cada ítem va en su propia rama y su propio PR.
 
 **Seguridad (camino a H-SEC):**
@@ -290,7 +300,8 @@ Cada ítem va en su propia rama y su propio PR.
 
 **No entran en esta lista:**
 - Por Meta: P0-4, P0-5, P1-4.
-- Por decisión de Luis: D-1 (aplicarla en `advantio/`), las preguntas abiertas de P1-1 y el comprador de contado.
+- Por decisión de Luis: D-1 (aplicarla en `advantio/`), D-3 (almacén de tokens), las preguntas abiertas de P1-1,
+  la reescritura del §4 del brief y el comprador de contado.
 - Firmas humanas: S-4, S-5.
 
 ---
