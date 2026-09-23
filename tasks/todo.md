@@ -34,7 +34,7 @@ duplica: solo lleva lo que está en curso ahora mismo.
 - [x] P0-3: seed corrido en el proyecto real (verificado 2026-09-23)
 - [x] P0-6: bucket privado `expedientes` creado (verificado 2026-09-23)
 - [ ] S-2: correr la prueba de no-cruce contra el proyecto real
-- [ ] D-2: Luis elige la opción de cobro → desbloquea P1-1
+- [x] D-2: WABA de Advantio (opción A), 2026-09-23. D-3 se cierra con el token global en `.env`
 - [ ] Decisión de producto: ¿el comprador de contado salta el semáforo de financiamiento?
 
 ### Lo inmediato, si hay que elegir tres

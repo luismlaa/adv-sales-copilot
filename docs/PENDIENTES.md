@@ -39,25 +39,18 @@ Ninguna de estas la puede tomar un agente. Todas son H7 o materia de hardstop.
       así el 2026-09-20, pero **la enmienda no está redactada ni aplicada**.
       → *Bloquea H-SEC.* Mientras no exista, aprobar el go-live contradice tus propios documentos rectores.
 
-- [~] **D-2 · Quién es dueño de la WABA.** Luis se inclina por **B (WABA por dealer)**, 2026-09-21.
-      Matices: B aísla la calificación de calidad entre dealers, pero no aísla más los datos, y
-      **no hace más rápido el alta** (cada dealer verifica su negocio y aprueba plantillas; Advantio
-      debe hacerse Tech Provider). Opciones de cobro con B: (1) Meta cobra al dealer y Advantio cobra
-      base + conversaciones + tarifa de servicio por plantilla — *recomendada*; (2) Solution Partner o
-      BSP con línea de crédito, Advantio revende con margen; (3) A primero, B con volumen.
-      **Falta que Luis elija la opción de cobro.** Texto original de la decisión: Decide el modelo de facturación completo:
-      - **A · WABA de Advantio** — verificación una vez, plantillas una vez, **Meta te cobra a ti**,
-        tus contadores *son* la factura. Riesgo: rating de calidad compartido, un dealer que abuse
-        puede tumbar a todos.
-      - **B · WABA por dealer** (Advantio como Tech Provider) — cada dealer verifica su negocio y
-        aprueba sus plantillas, **Meta le cobra directo al dealer**, tus contadores pasan a ser
-        lo que *reportas*, no lo que cobras. Contradice §4 del brief tal como está escrita.
+- [x] **D-2 · Quién es dueño de la WABA.** Cerrado 2026-09-23 por Luis: **A · WABA de Advantio.**
+      Se descarta B. Consecuencias:
+      - Una verificación de negocio y una aprobación de plantillas, ambas de Advantio.
+      - **Meta le cobra a Advantio**: tus contadores (`usage_events`) *son* la factura al dealer.
+      - Hay que registrar un método de pago en la WABA. El costo de Meta entra al pricing (H-PRICE, P1-4).
+      - Riesgo aceptado: la calificación de calidad del número es compartida; un dealer que abuse
+        afecta a todos. Mitigarlo con P2-2 (topes por tenant) y P1-7 (alertas).
+      - Sin Tech Provider ni Embedded Signup.
 
-      Recomendación: **A** para los primeros dealers, migrar a B cuando el volumen justifique el
-      riesgo de blast radius. → *Bloquea D-3, P0-4 y el pricing.*
-
-- [ ] **D-3 · Dónde viven los access tokens de WhatsApp.** Depende de D-2.
-      Con el modelo A basta el token global de `.env`. Con el modelo B, cada dealer trae el suyo
+- [x] **D-3 · Dónde viven los access tokens de WhatsApp.** Cerrado por D-2 = A (2026-09-23):
+      **un token global de system user en `.env`**, solo servidor. No se guardan tokens de terceros.
+      Queda como referencia por si algún día se migra a B: Con el modelo B, cada dealer trae el suyo
       y hay que decidir el almacén: Supabase Vault, un secret manager externo, o cifrado en
       columna. **Guardar tokens de terceros en la base es materia de H-DATA** — deliberadamente
       no lo inventé.
@@ -132,7 +125,7 @@ Ninguna de estas la puede tomar un agente. Todas son H7 o materia de hardstop.
 
 ## Bloque 3 · P1 — sin esto no cobras bien ni operas
 
-- [ ] **P1-1 · Recordatorios y reactivaciones.** Bloqueado por la opción de cobro de D-2. Preguntas
+- [ ] **P1-1 · Recordatorios y reactivaciones.** D-2 cerrado (A: Meta cobra a Advantio). Siguen abiertas las preguntas
       abiertas a Luis (2026-09-21): qué es recordatorio (propuesta: documentos pendientes, *utility*) y
       qué es reactivación; cadencia y tope por lead; envío automático o aprobado por el vendedor;
       qué pasa al agotar base + paquetes; solo en horario del dealer. ⚠️ **Hueco de facturación conocido.**
@@ -200,8 +193,7 @@ Ninguna de estas la puede tomar un agente. Todas son H7 o materia de hardstop.
 
 ### Cómo arrancar la verificación de Meta (P0-4) — lo hace Luis
 
-Esto vale con cualquier opción de D-2: en los dos modelos Advantio necesita su propio portafolio
-verificado y una app de Meta.
+Con D-2 = A, todo se hace una sola vez y a nombre de Advantio.
 
 1. **Portafolio comercial de Advantio** → https://business.facebook.com/ (crearlo si no existe,
    con el nombre legal exacto de la empresa).
@@ -214,9 +206,11 @@ verificado y una app de Meta.
 3. **App de Meta** → https://developers.facebook.com/apps → *Crear app* → tipo *Business* → agregar
    el producto **WhatsApp**. Eso da un número de prueba para avanzar P0-5 sin esperar la verificación.
    Guía: https://developers.facebook.com/docs/whatsapp/cloud-api/get-started
-4. **Si D-2 queda en B (WABA por dealer):** registrarse como Tech Provider →
-   https://developers.facebook.com/docs/whatsapp/solution-providers/get-started-for-tech-providers
-   (requiere el paso 2 aprobado + App Review para los permisos `whatsapp_business_*`).
+4. **Método de pago en la WABA** (D-2 = A: Meta le cobra a Advantio).
+   Documentos que tiene Luis para el paso 2 (2026-09-23): cédula, facturas de servicios a su nombre
+   y el **certificado de nombre comercial "Advantio" de ONAPI** a su nombre. No tiene RNC ni dominio propio;
+   el sitio es https://advantio.web.app/. El RNC de persona física (la cédula, inscrita en DGII) es
+   opcional y se usa solo si Meta rechaza el certificado de ONAPI.
 5. Cuando exista la app, pásale al agente `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` y el
    `phone_number_id` de prueba para cerrar P0-5. Los secretos van en `.env.local`, no en el chat.
 
@@ -261,7 +255,6 @@ es un producto de catálogo — es una consultoría con más pasos.
 
 Ninguna de estas es un olvido; cada una espera una decisión del Bloque 0:
 
-- Almacén de tokens de WhatsApp por dealer → **D-3**
 - Clasificación de documentos por visión → **D-4**
 - Enmienda a los documentos rectores de Advantio → **D-1**, y además nada de este repo debe escribir en `advantio/`
 
@@ -269,7 +262,7 @@ Ninguna de estas es un olvido; cada una espera una decisión del Bloque 0:
 
 ## Lo que el agente puede resolver sin Meta ni decisiones de Luis
 
-Revisado 2026-09-23. Nada de esta lista depende de P0-4, D-2, D-3 ni de la decisión sobre el comprador de contado.
+Revisado 2026-09-23. Nada de esta lista depende de P0-4 ni de la decisión sobre el comprador de contado.
 Cada ítem va en su propia rama y su propio PR.
 
 **Seguridad (camino a H-SEC):**
@@ -297,7 +290,7 @@ Cada ítem va en su propia rama y su propio PR.
 
 **No entran en esta lista:**
 - Por Meta: P0-4, P0-5, P1-4.
-- Por decisión de Luis: D-1 (aplicarla en `advantio/`), D-2 (P1-1), D-3 y el comprador de contado.
+- Por decisión de Luis: D-1 (aplicarla en `advantio/`), las preguntas abiertas de P1-1 y el comprador de contado.
 - Firmas humanas: S-4, S-5.
 
 ---
