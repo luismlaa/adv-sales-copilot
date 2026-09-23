@@ -23,7 +23,7 @@
 | Contadores `recordatorios` y `reactivaciones` | **No se escriben nunca** — ver P1-1 |
 | Kanban del dealer | Con login y dealer de ejemplo: muestra los 8 prospectos demo |
 | Login del dealer | Supabase Auth + middleware de sesión + `/login` |
-| Dealer de ejemplo | `npm run db:seed-demo` — idempotente |
+| Dealer de ejemplo | `npm run db:seed-demo` — idempotente; corrido en el proyecto real |
 
 ---
 
@@ -81,11 +81,12 @@ Ninguna de estas la puede tomar un agente. Todas son H7 o materia de hardstop.
 
 - [x] **P0-2 · Proyecto de Supabase creado y migración aplicada.** Cerrado 2026-09-23 por Luis.
       Proyecto `zrvstevcddpiihfpxoup` con `0001_init.sql` aplicada (vía *Session pooler*, sin
-      `supabase login`). Pendiente de verificación independiente: correr S-2 contra esta base.
-      Siguiente: `npm run db:seed-demo` contra el proyecto real (P0-3). *(S)*
+      `supabase login`). Verificado 2026-09-23 contra la base real: las tablas responden.
+      Falta la prueba de no-cruce (S-2) contra esta base. *(S)*
 
-- [x] **P0-3 · Seed de un tenant completo** — `scripts/seed-demo.ts`. Correr contra el proyecto real al cerrar P0-2.: dealer + ruleset **vigente** + plan con cupos base +
-      usuario en `tenant_members`.
+- [x] **P0-3 · Seed de un tenant completo** — `scripts/seed-demo.ts`: dealer + ruleset **vigente** + plan con cupos base +
+      usuario en `tenant_members`. Corrido contra el proyecto real; verificado 2026-09-23: 1 tenant,
+      ruleset v1 vigente, 1 `tenant_plan`, 1 miembro `owner`, 8 leads demo.
       Sin ruleset vigente el webhook lanza excepción en el primer mensaje. *(S)*
 
 - [ ] **P0-4 · Meta operativo.** Ver el desglose de "una vez vs por dealer" abajo. **Es el camino
@@ -96,7 +97,10 @@ Ninguna de estas la puede tomar un agente. Todas son H7 o materia de hardstop.
       crudo, y una conversación entera ida y vuelta. La firma está implementada y nunca verificada
       contra un payload real de Meta. *(S)*
 
-- [ ] **P0-6 · Bucket de Storage creado** (`expedientes`) con cifrado en reposo. *(S)*
+- [x] **P0-6 · Bucket de Storage creado** (`expedientes`) con cifrado en reposo. *(S)*
+      Verificado 2026-09-23: bucket `expedientes` **privado** en el proyecto real. Cifrado en reposo:
+      el de plataforma de Supabase (AES-256), no uno propio. Las políticas RLS del bucket siguen
+      abiertas → S-1.
 
 ---
 

@@ -31,7 +31,9 @@ duplica: solo lleva lo que está en curso ahora mismo.
 - [x] Fix: `pedirDocumentos` fallaba siempre (upsert contra índice parcial)
 - [x] D-1: enmienda redactada en `docs/decisiones/D-1-enmienda-h7.md` (falta aplicarla en `advantio/`)
 - [x] P0-2: proyecto de Supabase creado y migración aplicada (Luis, 2026-09-23)
-- [ ] P0-3: correr `npm run db:seed-demo` contra el proyecto real + S-2 no-cruce
+- [x] P0-3: seed corrido en el proyecto real (verificado 2026-09-23)
+- [x] P0-6: bucket privado `expedientes` creado (verificado 2026-09-23)
+- [ ] S-2: correr la prueba de no-cruce contra el proyecto real
 - [ ] D-2: Luis elige la opción de cobro → desbloquea P1-1
 - [ ] Decisión de producto: ¿el comprador de contado salta el semáforo de financiamiento?
 
