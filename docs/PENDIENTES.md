@@ -4,7 +4,7 @@
 > y un dealer real usando el producto en producción. Es la fuente única: `tasks/todo.md`
 > lleva el plan del día a día y apunta aquí.
 >
-> Última revisión: **2026-09-23** · rama `feat/dealer-demo-y-login` · 58 pruebas en verde · `tsc --noEmit` limpio · `next build` compila · migración y demo verificadas contra Supabase local · proyecto real creado y migrado (P0-2)
+> Última revisión: **2026-09-23** · rama `feat/dealer-demo-y-login` (PR #1 abierto contra `main`) · 58 pruebas en verde · `tsc --noEmit` limpio · `next build` compila · migración y demo verificadas contra Supabase local · proyecto real creado y migrado (P0-2)
 
 ---
 
@@ -92,6 +92,7 @@ Ninguna de estas la puede tomar un agente. Todas son H7 o materia de hardstop.
 - [ ] **P0-4 · Meta operativo.** Ver el desglose de "una vez vs por dealer" abajo. **Es el camino
       crítico**: la verificación de negocio y la aprobación de plantillas toman días o semanas, no horas.
       Arranca por aquí aunque el código no esté listo. *(L, calendario)*
+      → Pasos y enlaces en **"Cómo arrancar la verificación de Meta"**, más abajo.
 
 - [ ] **P0-5 · Webhook probado contra Meta de verdad.** Handshake `GET`, firma HMAC sobre cuerpo
       crudo, y una conversación entera ida y vuelta. La firma está implementada y nunca verificada
@@ -197,6 +198,28 @@ Ninguna de estas la puede tomar un agente. Todas son H7 o materia de hardstop.
 > Verifica contra la documentación vigente de Meta antes de comprometerte: los nombres de programa
 > y los requisitos cambian, y el brief ya avisa del cambio de tarifas del 2026-10-01.
 
+### Cómo arrancar la verificación de Meta (P0-4) — lo hace Luis
+
+Esto vale con cualquier opción de D-2: en los dos modelos Advantio necesita su propio portafolio
+verificado y una app de Meta.
+
+1. **Portafolio comercial de Advantio** → https://business.facebook.com/ (crearlo si no existe,
+   con el nombre legal exacto de la empresa).
+2. **Verificación del negocio** → https://business.facebook.com/settings/security
+   (*Centro de seguridad → Iniciar verificación*). Ayuda: https://www.facebook.com/business/help/2058515294227817
+   Ten a mano:
+   - nombre legal, dirección y teléfono **idénticos** a los del documento;
+   - documento oficial: certificado de RNC (DGII) o registro mercantil;
+   - sitio web en un dominio propio, y un correo en ese dominio o un DNS TXT para comprobarlo.
+3. **App de Meta** → https://developers.facebook.com/apps → *Crear app* → tipo *Business* → agregar
+   el producto **WhatsApp**. Eso da un número de prueba para avanzar P0-5 sin esperar la verificación.
+   Guía: https://developers.facebook.com/docs/whatsapp/cloud-api/get-started
+4. **Si D-2 queda en B (WABA por dealer):** registrarse como Tech Provider →
+   https://developers.facebook.com/docs/whatsapp/solution-providers/get-started-for-tech-providers
+   (requiere el paso 2 aprobado + App Review para los permisos `whatsapp_business_*`).
+5. Cuando exista la app, pásale al agente `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` y el
+   `phone_number_id` de prueba para cerrar P0-5. Los secretos van en `.env.local`, no en el chat.
+
 ---
 
 ## Runbook de onboarding por dealer (lo repetible)
@@ -241,6 +264,41 @@ Ninguna de estas es un olvido; cada una espera una decisión del Bloque 0:
 - Almacén de tokens de WhatsApp por dealer → **D-3**
 - Clasificación de documentos por visión → **D-4**
 - Enmienda a los documentos rectores de Advantio → **D-1**, y además nada de este repo debe escribir en `advantio/`
+
+---
+
+## Lo que el agente puede resolver sin Meta ni decisiones de Luis
+
+Revisado 2026-09-23. Nada de esta lista depende de P0-4, D-2, D-3 ni de la decisión sobre el comprador de contado.
+Cada ítem va en su propia rama y su propio PR.
+
+**Seguridad (camino a H-SEC):**
+1. **S-1 · RLS en `storage.objects`** para el bucket `expedientes`, por prefijo `<tenant_id>/`.
+2. **S-2 · Prueba de no-cruce contra la base real.** Corre dentro de `begin … rollback`: no deja datos.
+3. **S-3 · Job de retención**: borrar binarios vencidos y marcar `borrado_en`.
+4. **P2-6 · CI**: `npm test` + `tsc` en cada PR (+ la prueba de no-cruce contra una base efímera).
+
+**Producto para el vendedor:**
+5. **P1-6 · Mover etapas en el Kanban.**
+6. **P1-5 · Vista de expediente** con reasignación de adjuntos.
+7. **P1-2 · Pantalla de importación de inventario.**
+8. **P2-5 · Panel de consumo** del cupo base.
+
+**Deuda técnica:**
+9. Horario y dirección del dealer desde `tenants`, no literales en `handle-inbound.ts`.
+10. Asignar `vehiculo_interes` cuando el copiloto encuentra el vehículo.
+11. Compactación del historial (hoy son 20 mensajes planos).
+
+**Robustez:**
+12. **P2-1 · Modo dry-run.** Es clave para probar con un dealer real antes de enviar mensajes.
+13. **P2-2 · Rate limiting y tope de gasto.** P2-3 · Circuit breaker para la Graph API.
+14. **P1-3 · Calibrar el costo unitario** con conversaciones simuladas contra la API de Anthropic;
+    no necesita WhatsApp. Alimenta H-PRICE, que igual aprueba Luis.
+
+**No entran en esta lista:**
+- Por Meta: P0-4, P0-5, P1-4.
+- Por decisión de Luis: D-1 (aplicarla en `advantio/`), D-2 (P1-1), D-3 y el comprador de contado.
+- Firmas humanas: S-4, S-5.
 
 ---
 
