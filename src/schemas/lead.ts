@@ -40,6 +40,7 @@ export const fichaProspectoSchema = z
   })
   .strict();
 
+export type FormaPago = z.infer<typeof formaPagoSchema>;
 export type FichaProspecto = z.infer<typeof fichaProspectoSchema>;
 
 export const temperaturaSchema = z.enum(["frio", "tibio", "caliente"]);

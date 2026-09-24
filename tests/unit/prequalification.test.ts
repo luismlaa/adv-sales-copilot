@@ -130,7 +130,7 @@ describe("temperaturaDe", () => {
         documentos_pendientes: [],
         aviso:
           "Pre-filtro contra las reglas del dealer. No es una decision de credito; esa la toma el banco.",
-      }),
+      }, "financiamiento"),
     ).toBe("caliente");
   });
 
@@ -143,8 +143,67 @@ describe("temperaturaDe", () => {
         documentos_pendientes: ["carta_trabajo"],
         aviso:
           "Pre-filtro contra las reglas del dealer. No es una decision de credito; esa la toma el banco.",
-      }),
+      }, "financiamiento"),
     ).toBe("tibio");
+  });
+
+  // Decision de producto (Luis, 2026-09-24): el contado no se mide con la regla
+  // de financiamiento. Va caliente aunque el motor diga que no califica y aunque
+  // el expediente este vacio, porque no depende de que un banco le apruebe nada.
+  it("caliente de contado aunque el motor diga no_califica", () => {
+    expect(
+      temperaturaDe(
+        {
+          resultado: "no_califica",
+          detalle: [],
+          faltantes: [],
+          documentos_pendientes: ["cedula_frontal", "carta_trabajo"],
+          aviso:
+            "Pre-filtro contra las reglas del dealer. No es una decision de credito; esa la toma el banco.",
+        },
+        "contado",
+      ),
+    ).toBe("caliente");
+  });
+
+  it("el contado nunca queda por debajo de quien financia", () => {
+    // El `as const` va solo en `aviso`, que es un tipo literal en el schema.
+    // En todo el objeto volveria los arrays readonly y tampoco encajaria.
+    const base = {
+      detalle: [],
+      faltantes: [],
+      aviso:
+        "Pre-filtro contra las reglas del dealer. No es una decision de credito; esa la toma el banco." as const,
+    };
+    const ORDEN = { frio: 0, tibio: 1, caliente: 2 } as const;
+
+    const contado = temperaturaDe(
+      { ...base, resultado: "no_califica", documentos_pendientes: ["cedula_frontal"] },
+      "contado",
+    );
+    // El mejor caso posible de quien financia: verde y expediente completo.
+    const financiaMejorCaso = temperaturaDe(
+      { ...base, resultado: "califica", documentos_pendientes: [] },
+      "financiamiento",
+    );
+
+    expect(ORDEN[contado]).toBeGreaterThanOrEqual(ORDEN[financiaMejorCaso]);
+  });
+
+  it("el indeciso sigue la regla de financiamiento, no la de contado", () => {
+    expect(
+      temperaturaDe(
+        {
+          resultado: "no_califica",
+          detalle: [],
+          faltantes: [],
+          documentos_pendientes: [],
+          aviso:
+            "Pre-filtro contra las reglas del dealer. No es una decision de credito; esa la toma el banco.",
+        },
+        "indeciso",
+      ),
+    ).toBe("frio");
   });
 
   it("frio cuando no califica", () => {
@@ -156,7 +215,7 @@ describe("temperaturaDe", () => {
         documentos_pendientes: [],
         aviso:
           "Pre-filtro contra las reglas del dealer. No es una decision de credito; esa la toma el banco.",
-      }),
+      }, "financiamiento"),
     ).toBe("frio");
   });
 });

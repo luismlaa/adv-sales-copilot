@@ -61,6 +61,14 @@ interface LeadDemo {
   readonly documentosRecibidos: readonly DocumentoRequerido[];
   /** Documentos pedidos que todavia no llegan. */
   readonly documentosPendientes: readonly DocumentoRequerido[];
+  /**
+   * Temperatura declarada a mano. Solo hace falta para `forma_pago: indeciso`
+   * (o ausente): el contado lo resuelve el dominio — siempre caliente — y el
+   * financiamiento lo deriva del semaforo. Al indeciso no le corresponde
+   * ninguna de las dos, y derivarlo de un semaforo que no se guarda pintaria
+   * al curioso mas caliente que a un comprador real.
+   */
+  readonly temperatura?: "frio" | "tibio" | "caliente";
 }
 
 // Telefonos ficticios (rango 555): no pertenecen a nadie.
@@ -70,6 +78,7 @@ const LEADS: readonly LeadDemo[] = [
     nombre: "Carlos Méndez",
     etapa: "nuevo",
     ficha: { nombre: "Carlos Méndez", marca_interes: "Toyota", modelo_interes: "Corolla", forma_pago: "indeciso" },
+    temperatura: "frio",
     documentosRecibidos: [],
     documentosPendientes: [],
   },
@@ -147,6 +156,30 @@ function exigir<T>(resultado: { data: T | null; error: { message: string } | nul
   return resultado.data;
 }
 
+/** Igual que `exigir` pero para lo que no devuelve fila: los delete del reset. */
+function exigirOk(resultado: { error: { message: string } | null }, que: string): void {
+  if (resultado.error !== null) throw new Error(`${que}: ${resultado.error.message}`);
+}
+
+/**
+ * Freno contra correr el seed sobre datos reales.
+ *
+ * Este script borra, hace upsert y resetea la clave de un usuario con la
+ * service role key, que salta RLS — y `npm run db:seed-demo` carga
+ * `.env.local`, donde vive el proyecto de verdad. Contra cualquier host que no
+ * sea local exige que lo confirmes nombrandolo.
+ */
+function exigirDestinoSeguro(url: string): void {
+  const host = new URL(url).hostname;
+  if (host === "localhost" || host === "127.0.0.1" || host === "::1") return;
+  if (process.env["SEED_CONFIRM"] === host) return;
+  throw new Error(
+    `El seed borra y reescribe en ${host} con la service role key, y resetea la clave de DEMO_EMAIL.
+` +
+      `Si es lo que quieres: SEED_CONFIRM=${host} npm run db:seed-demo`,
+  );
+}
+
 async function asegurarUsuario(db: SupabaseClient, email: string, password: string): Promise<string> {
   // listUsers pagina de a 50 por defecto; un proyecto de demo no pasa de ahi,
   // pero se pide la pagina grande para no crear un duplicado por paginacion.
@@ -170,7 +203,10 @@ async function asegurarUsuario(db: SupabaseClient, email: string, password: stri
 }
 
 async function main(): Promise<void> {
-  const db = createClient(requerida("NEXT_PUBLIC_SUPABASE_URL"), requerida("SUPABASE_SERVICE_ROLE_KEY"), {
+  const url = requerida("NEXT_PUBLIC_SUPABASE_URL");
+  exigirDestinoSeguro(url);
+
+  const db = createClient(url, requerida("SUPABASE_SERVICE_ROLE_KEY"), {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
@@ -275,6 +311,19 @@ async function main(): Promise<void> {
           : { precio: vehiculo.precio, moneda: "DOP", marca: vehiculo.marca, anio: vehiculo.anio },
       documentosRecibidos: demo.documentosRecibidos,
     });
+
+    // El semaforo solo se guarda si financia. El contado lo resuelve el
+    // dominio (siempre caliente); al indeciso no le toca ninguna de las dos, y
+    // derivarlo de un semaforo que no se guarda pintaria una tarjeta que el
+    // tablero no puede explicar: se para el seed aqui.
+    const financia = demo.ficha.forma_pago === "financiamiento";
+    const contado = demo.ficha.forma_pago === "contado";
+    if (!financia && !contado && demo.temperatura === undefined) {
+      throw new Error(
+        `${demo.nombre}: forma_pago "${String(demo.ficha.forma_pago)}" no lleva semaforo ni ` +
+          `regla de contado, asi que necesita \`temperatura\` declarada en LEADS.`,
+      );
+    }
     // Los mas avanzados en el tablero aparecen como movidos mas recientemente.
     const actualizado = new Date(Date.now() - (LEADS.length - i) * 3_600_000).toISOString();
 
@@ -287,7 +336,7 @@ async function main(): Promise<void> {
             telefono: demo.telefono,
             nombre: demo.nombre,
             etapa: demo.etapa,
-            temperatura: temperaturaDe(resultado),
+            temperatura: demo.temperatura ?? temperaturaDe(resultado, demo.ficha.forma_pago),
             ficha: demo.ficha,
             actualizado_en: actualizado,
           },
@@ -300,12 +349,21 @@ async function main(): Promise<void> {
 
     // Resultado y expediente se reemplazan completos: asi re-sembrar no apila
     // semaforos viejos ni choca con el indice unico parcial de documentos.
-    await db.from("qualification_results").delete().eq("tenant_id", tenantId).eq("lead_id", lead.id);
-    await db.from("lead_documents").delete().eq("tenant_id", tenantId).eq("lead_id", lead.id);
+    // Sin verificar, un delete fallido apila un segundo semaforo (el tablero lee
+    // `qualification_results[0]` de un embed sin orden) o hace que el insert de
+    // documentos choque con el indice unico y deje el tablero a medio sembrar.
+    exigirOk(
+      await db.from("qualification_results").delete().eq("tenant_id", tenantId).eq("lead_id", lead.id),
+      `Semaforo previo de ${demo.nombre}`,
+    );
+    exigirOk(
+      await db.from("lead_documents").delete().eq("tenant_id", tenantId).eq("lead_id", lead.id),
+      `Expediente previo de ${demo.nombre}`,
+    );
 
     // El semaforo es un pre-filtro de financiamiento: a quien paga de contado
     // o aun no decide no se le evalua.
-    if (demo.ficha.forma_pago === "financiamiento") {
+    if (financia) {
       exigir(
         await db
           .from("qualification_results")

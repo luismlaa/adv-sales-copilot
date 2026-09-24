@@ -248,7 +248,11 @@ es un producto de catálogo — es una consultoría con más pasos.
 - ~~`pedirDocumentos` usaba upsert contra un índice único parcial~~ — corregido 2026-09-21. Postgres
   rechaza ese `ON CONFLICT`; la herramienta fallaba siempre y el checklist nunca se creaba.
 - **Comprador de contado evaluado como si financiara.** El motor exige ingreso y antigüedad aunque
-  `forma_pago = contado` y devuelve `revisar`. Pendiente de decisión de producto.
+  `forma_pago = contado` y devuelve `revisar`. **Mitad resuelta (Luis, 2026-09-24):** la *temperatura*
+  del contado ya no depende del semáforo — entra `caliente` siempre, porque no tiene que buscar crédito
+  en una institución financiera. Lo que sigue abierto es si debe **saltarse el semáforo**:
+  `src/orchestrator/ports.ts` le inserta igual una fila en `qualification_results`, así que su tarjeta
+  puede mostrar `caliente` y `no califica` a la vez.
 
 - **Datos del dealer hardcodeados en el turno.** `handle-inbound.ts` pasa horario y dirección
   literales (`"lunes a sabado, 8:00 am a 6:00 pm"`, `"consultar con el vendedor"`). Deben salir de

@@ -1,6 +1,7 @@
 import type { TenantRules, DocumentoRequerido } from "@/schemas/tenant-rules";
 import type {
   FichaProspecto,
+  FormaPago,
   ReglaEvaluada,
   ResultadoPrecalificacion,
   Semaforo,
@@ -232,12 +233,25 @@ export function evaluarPrecalificacion(
 }
 
 /**
- * Temperatura del lead a partir del veredicto y de lo completo del expediente.
- * Es lo que ordena el Kanban: el vendedor abre primero lo caliente.
+ * Temperatura del lead. Es lo que ordena el Kanban: el vendedor abre primero
+ * lo caliente.
+ *
+ * `formaPago` es obligatorio aunque pueda venir `undefined`: quien paga de
+ * contado no se mide con la regla de financiamiento, y dejar el parametro
+ * opcional haria que olvidarlo pasara desapercibido.
  */
 export function temperaturaDe(
   resultado: ResultadoPrecalificacion,
+  formaPago: FormaPago | undefined,
 ): "frio" | "tibio" | "caliente" {
+  // Decision de producto (Luis, 2026-09-24): el comprador de contado entra
+  // CALIENTE siempre, sin importar la etapa ni lo completo del expediente, y
+  // por encima de cualquiera que financie. No tiene que someterse a que una
+  // institucion financiera le apruebe nada: en cuanto se interesa en un
+  // vehiculo es el comprador mas probable del tablero. El semaforo de
+  // financiamiento no le aplica, asi que aqui no se mira.
+  if (formaPago === "contado") return "caliente";
+
   if (resultado.resultado === "no_califica") return "frio";
   if (resultado.resultado === "califica" && resultado.documentos_pendientes.length === 0) {
     return "caliente";

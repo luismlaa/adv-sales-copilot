@@ -32,3 +32,28 @@ export async function dealerClient(): Promise<SupabaseClient> {
     },
   });
 }
+
+/**
+ * Cliente del flujo de autenticacion (login y logout).
+ *
+ * Identico a `dealerClient()` en todo menos en una cosa: aqui el fallo al
+ * escribir la cookie **si** revienta. Un Server Action tiene permiso para
+ * escribirla, asi que un fallo en este camino es un fallo real, no el caso
+ * esperado de los Server Components. Tragarselo dejaria a
+ * `signInWithPassword()` devolviendo exito con la sesion sin aterrizar: el
+ * middleware rebota a /login, el usuario ve el formulario otra vez y el login
+ * parece no hacer nada.
+ */
+export async function authClient(): Promise<SupabaseClient> {
+  const { supabaseUrl, supabaseAnonKey } = publicEnv();
+  const store = await cookies();
+
+  return createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll: () => store.getAll(),
+      setAll: (nuevas) => {
+        for (const c of nuevas) store.set(c.name, c.value, c.options);
+      },
+    },
+  });
+}

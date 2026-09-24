@@ -119,7 +119,7 @@ export function crearPuertos(db: SupabaseClient, ctx: ContextoLead): PuertosCopi
         faltantes: resultado.faltantes,
       });
 
-      const temperatura = temperaturaDe(resultado);
+      const temperatura = temperaturaDe(resultado, ficha.forma_pago);
       await db
         .from("leads")
         .update({
@@ -151,34 +151,66 @@ export function crearPuertos(db: SupabaseClient, ctx: ContextoLead): PuertosCopi
     async pedirDocumentos(documentos) {
       const retenerHasta = new Date();
       retenerHasta.setDate(retenerHasta.getDate() + ctx.reglas.retencion_documentos_dias);
+      const retener = retenerHasta.toISOString().slice(0, 10);
 
       // No se puede usar upsert: la unicidad por tipo es un indice PARCIAL
       // (excluye `otro`) y Postgres no lo infiere en ON CONFLICT sin su
-      // predicado, que PostgREST no sabe mandar. Se insertan solo los que faltan.
+      // predicado, que PostgREST no sabe mandar.
       const { data: existentes, error: errLeer } = await db
         .from("lead_documents")
-        .select("tipo")
+        .select("id, tipo, estado")
         .eq("tenant_id", tenantId)
         .eq("lead_id", ctx.leadId)
         .in("tipo", documentos);
       if (errLeer !== null) throw new Error(`No se pudo leer el expediente: ${errLeer.message}`);
 
-      const yaPedidos = new Set((existentes ?? []).map((d) => d.tipo as string));
-      const filas = [...new Set(documentos)]
-        .filter((tipo) => !yaPedidos.has(tipo))
-        .map((tipo) => ({
+      const previo = new Map(
+        (existentes ?? []).map((d) => [
+          d.tipo as string,
+          { id: d.id as string, estado: d.estado as string },
+        ]),
+      );
+
+      // Tipo por tipo a proposito. En lote, un solo 23505 aborta el INSERT
+      // completo en Postgres: el choque de un tipo se llevaria los demas, el
+      // turno diria `ok` igual y el cliente recibiria la peticion de un
+      // documento que no tiene casilla donde aterrizar.
+      for (const tipo of new Set(documentos)) {
+        const fila = previo.get(tipo);
+
+        // Ya pedido o ya recibido: el expediente queda como esta.
+        if (fila !== undefined && (fila.estado === "pendiente" || fila.estado === "recibido")) {
+          continue;
+        }
+
+        if (fila !== undefined) {
+          // `rechazado` o `borrado` por retencion. Se recicla la MISMA fila:
+          // `estado` no entra en `lead_documents_tipo_uniq`, asi que insertar
+          // otra choca, y sin casilla `pendiente` el reemplazo entraria como
+          // `otro` y el expediente no podria completarse nunca.
+          // El puntero al binario viejo se deja: lo sobrescribe el adjunto
+          // nuevo. Limpiar los huerfanos es trabajo del job de retencion.
+          const { error } = await db
+            .from("lead_documents")
+            .update({ estado: "pendiente", retener_hasta: retener })
+            .eq("tenant_id", tenantId)
+            .eq("id", fila.id);
+          if (error !== null) {
+            throw new Error(`No se pudo volver a pedir ${tipo}: ${error.message}`);
+          }
+          continue;
+        }
+
+        const { error } = await db.from("lead_documents").insert({
           tenant_id: tenantId,
           lead_id: ctx.leadId,
           tipo,
           estado: "pendiente" as const,
-          retener_hasta: retenerHasta.toISOString().slice(0, 10),
-        }));
-
-      if (filas.length > 0) {
-        const { error } = await db.from("lead_documents").insert(filas);
-        // 23505: otro turno concurrente ya lo pidio. El expediente queda igual.
+          retener_hasta: retener,
+        });
+        // 23505: un turno concurrente ya pidio ESTE tipo. Los demas siguen.
         if (error !== null && error.code !== "23505") {
-          throw new Error(`No se pudieron marcar documentos: ${error.message}`);
+          throw new Error(`No se pudo marcar ${tipo}: ${error.message}`);
         }
       }
 
